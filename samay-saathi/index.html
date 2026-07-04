@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Samay Saathi — AI Deadline Companion</title>
+<meta name="description" content="Samay Saathi: an AI productivity companion that proactively prioritizes, schedules and reminds you so deadlines never get missed." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-mark">SS</div>
+    <div class="brand-text">
+      <h1>Samay Saathi</h1>
+      <span data-i18n="tagline">Your AI companion before every deadline</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="chip"><span class="dot" id="prodDot"></span> <span data-i18n="prodScore">Productivity</span> <b id="prodScoreVal">—</b></div>
+    <div class="chip" id="atRiskChip" style="display:none;">⚠️ <b id="atRiskCount">0</b> <span data-i18n="atRisk">at risk</span></div>
+    <div class="lang-toggle">
+      <button id="langEn" class="active">EN</button>
+      <button id="langHi">हिं</button>
+    </div>
+  </div>
+</div>
+
+<div class="shell">
+
+  <!-- LEFT COLUMN -->
+  <div class="col-left">
+    <div class="card">
+      <div class="card-title">
+        <h3 data-i18n="addTask">➕ Add a task</h3>
+      </div>
+      <form id="taskForm">
+        <label data-i18n="lblTitle">Task title</label>
+        <div class="field-with-btn">
+          <input type="text" id="tTitle" placeholder="e.g. Submit GST return" required />
+          <button type="button" class="btn-mic" id="micBtn" title="Voice input">🎤</button>
+        </div>
+        <div class="voice-preview" id="voicePreview"></div>
+
+        <label data-i18n="lblDeadline">Deadline</label>
+        <input type="datetime-local" id="tDeadline" required />
+
+        <div class="row2">
+          <div>
+            <label data-i18n="lblDuration">Est. time needed (min)</label>
+            <input type="number" id="tDuration" value="60" min="5" step="5" required />
+          </div>
+          <div>
+            <label data-i18n="lblCategory">Category</label>
+            <select id="tCategory">
+              <option value="academic" data-i18n="catAcademic">Academic</option>
+              <option value="work" data-i18n="catWork">Work</option>
+              <option value="bill" data-i18n="catBill">Bill / Payment</option>
+              <option value="interview" data-i18n="catInterview">Interview</option>
+              <option value="personal" data-i18n="catPersonal">Personal</option>
+            </select>
+          </div>
+        </div>
+
+        <label data-i18n="lblImportance">How important is this?</label>
+        <div class="range-wrap">
+          <input type="range" id="tImportance" min="1" max="5" value="3" />
+          <span class="imp-badge" id="impBadge">3</span>
+        </div>
+
+        <button type="submit" class="btn btn-primary" data-i18n="btnAdd">Add task — let AI prioritize</button>
+      </form>
+
+      <details class="settings">
+        <summary data-i18n="workHours">⚙️ Working hours (used for auto-scheduling)</summary>
+        <div class="row2" style="margin-top:10px;">
+          <div>
+            <label data-i18n="lblStart">Start</label>
+            <input type="time" id="setStart" value="09:00" />
+          </div>
+          <div>
+            <label data-i18n="lblEnd">End</label>
+            <input type="time" id="setEnd" value="21:00" />
+          </div>
+        </div>
+        <button type="button" class="btn btn-ghost" id="saveSettings" style="width:100%; margin-top:10px;" data-i18n="btnSave">Save</button>
+      </details>
+    </div>
+
+    <div class="card">
+      <div class="card-title">
+        <h3 data-i18n="habits">🔥 Goals &amp; habits</h3>
+      </div>
+      <div id="habitList"></div>
+      <div class="add-habit">
+        <input type="text" id="habitInput" placeholder="e.g. Daily DSA practice" />
+        <button class="btn btn-ghost" id="addHabitBtn" data-i18n="btnAddShort">Add</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN COLUMN -->
+  <div class="col-main">
+    <div class="insight">
+      <div class="badge-ai">🤖</div>
+      <div>
+        <h4 data-i18n="aiInsight">AI Insight</h4>
+        <p id="insightText">Loading your day…</p>
+      </div>
+    </div>
+
+    <div id="taskListWrap"></div>
+
+    <div class="card">
+      <div class="card-title">
+        <h3 data-i18n="autoSchedule">📅 AI auto-schedule (next 7 days)</h3>
+        <span class="muted" data-i18n="autoScheduleSub">Tasks placed automatically into free time before their deadline</span>
+      </div>
+      <div class="week-grid" id="weekGrid"></div>
+      <div id="riskBannerWrap"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT COLUMN -->
+  <div class="col-right">
+    <div class="card">
+      <div class="card-title">
+        <h3 data-i18n="calendar">🗓️ Calendar</h3>
+      </div>
+      <div class="cal-head">
+        <span class="muted" id="calMonthLabel">—</span>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">
+        <h3 data-i18n="analytics">📊 Analytics</h3>
+      </div>
+      <div class="donut-wrap">
+        <svg width="84" height="84" viewBox="0 0 84 84">
+          <circle cx="42" cy="42" r="34" fill="none" stroke="#252A37" stroke-width="10" />
+          <circle id="donutFg" cx="42" cy="42" r="34" fill="none" stroke="#2EC4B6" stroke-width="10"
+            stroke-dasharray="213.6" stroke-dashoffset="213.6" stroke-linecap="round" transform="rotate(-90 42 42)" />
+        </svg>
+        <div class="donut-stats">
+          <div class="big" id="donutPct">0%</div>
+          <div class="muted" data-i18n="completedLabel">tasks completed</div>
+        </div>
+      </div>
+      <div class="legend">
+        <div class="legend-row"><span class="legend-sw" style="background:var(--p-critical)"></span> <span data-i18n="legCritical">Critical</span>: <b id="legCritCount">0</b></div>
+        <div class="legend-row"><span class="legend-sw" style="background:var(--p-high)"></span> <span data-i18n="legHigh">High</span>: <b id="legHighCount">0</b></div>
+        <div class="legend-row"><span class="legend-sw" style="background:var(--p-medium)"></span> <span data-i18n="legMedium">Medium</span>: <b id="legMedCount">0</b></div>
+        <div class="legend-row"><span class="legend-sw" style="background:var(--p-low)"></span> <span data-i18n="legLow">Low</span>: <b id="legLowCount">0</b></div>
+      </div>
+      <div class="bars" id="weekBars"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">
+        <h3 data-i18n="reminders">🔔 Reminder feed</h3>
+      </div>
+      <div id="feedList"><div class="empty-state" data-i18n="noReminders">No reminders yet</div></div>
+    </div>
+  </div>
+
+</div>
+
+<footer class="app-footer">
+  Samay Saathi — Built for Indian students, professionals &amp; entrepreneurs · 100% offline-capable demo · No data leaves your browser
+</footer>
+
+<div id="toast-container"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
